@@ -15,6 +15,7 @@ export function Converter() {
   const [txs, setTxs] = useState<Transaction[]>([]); 
   const [status, setStatus] = useState('Prêt'); 
   const [progress, setProgress] = useState(0)
+  const [cutoffDate, setCutoffDate] = useState('')
 
   async function process(file: File) {
     setStatus(`Lecture de ${file.name}`);
@@ -74,13 +75,28 @@ export function Converter() {
   }
 
   const totals = useMemo(() => ({
-    debit: txs.filter(t => t.type === 'DEBIT').reduce((s, t) => s + t.amount, 0)
-     credit: txs.filter(t => t.type === 'CREDIT').reduce((s, t) => s + t.amount, 0),
+    debit: txs.filter(t => t.type === 'DEBIT').reduce((s, t) => s + t.amount, 0),
+    credit: txs.filter(t => t.type === 'CREDIT').reduce((s, t) => s + t.amount, 0),
   }), [txs])
 
   function update(i: number, k: keyof Transaction, v: string) {
     setTxs(a => a.map((t, idx) => idx === i ? { ...t, [k]: k === 'amount' ? Number(v) : v } : t))
   }
+function removeRow(i: number) {
+  setTxs(a => a.filter((_, idx) => idx !== i))
+}
+
+function removeBefore() {
+  if (!cutoffDate) return;
+  const cutoff = cutoffDate.replace(/-/g, ''); // yyyy-mm-dd -> yyyymmdd
+  setTxs(a => a.filter(t => t.date >= cutoff))
+}
+
+function removeFrom() {
+  if (!cutoffDate) return;
+  const cutoff = cutoffDate.replace(/-/g, '');
+  setTxs(a => a.filter(t => t.date < cutoff))
+}
 
   async function exportOfx() {
     if (!info) return;
@@ -182,6 +198,15 @@ export function Converter() {
                       <h2>Transactions</h2>
                       <p>Vérifiez les lignes avant de générer le fichier comptable.</p>
                     </div>
+                    <div className="cutoffTools">
+  <input
+    type="date"
+    value={cutoffDate}
+    onChange={e => setCutoffDate(e.target.value)}
+  />
+  <button className="ghost" onClick={removeBefore}>Garder à partir de cette date</button>
+  <button className="ghost" onClick={removeFrom}>Garder avant cette date</button>
+</div>
                     <div className="actions">
                       <button className="secondary" onClick={() => info && downloadExcel(info, txs, `${files[active]?.name.replace(/\.pdf$/i, '') || 'journal'}.xlsx`)}>
                         <FileSpreadsheet size={16}/>Excel
@@ -201,6 +226,7 @@ export function Converter() {
                           <th>Libellé</th>
                           <th>Mémo</th>
                           <th className="right">Montant</th>
+                           <th></th>
                         </tr>
                       </thead>
                       <tbody>
@@ -213,7 +239,7 @@ export function Converter() {
                               }}/>
                             </td>
                             <td>
-                              <select value={t.type} onChange={e => update(i, 'type', e.target.value)}
+                              <select value={t.type} onChange={e => update(i, 'type', e.target.value)}>
                                 <option>DEBIT</option>
                                <option>CREDIT</option>
                               </select>
@@ -222,6 +248,11 @@ export function Converter() {
                             <td><input value={t.memo} onChange={e => update(i, 'memo', e.target.value)}/></td>
                             <td className="right">
                               <input className={`amount ${t.amount >= 0 ? 'positive' : 'negative'}`} value={t.amount} onChange={e => update(i, 'amount', e.target.value)}/>
+                            </td>
+                            <td className="right">
+                             <button className="iconBtn" title="Supprimer cette ligne" onClick={() => removeRow(i)}>
+                                <Trash2 size={14}/>
+                              </button>
                             </td>
                           </tr>
                         ))}

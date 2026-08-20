@@ -206,3 +206,10 @@ footer a{color:var(--brass)}
   .actions{width:100%}
   .actions button{width:100%}
 }
+.cutoffTools{display:flex;align-items:center;gap:8px;padding:0 20px 14px;flex-wrap:wrap}
+.cutoffTools input[type=date]{border:1px solid var(--line);border-radius:9px;padding:9px 10px;
+  background:var(--panel-2);color:var(--ivory);font-size:12px}
+.cutoffTools input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.7)}
+.iconBtn{border:1px solid transparent;background:transparent;cursor:pointer;padding:6px;
+  border-radius:8px;color:var(--muted);display:inline-flex;transition:.2s}
+.iconBtn:hover{color:var(--coral);background:var(--coral-dim)}

@@ -97,6 +97,9 @@ function removeFrom() {
   const cutoff = cutoffDate.replace(/-/g, '');
   setTxs(a => a.filter(t => t.date < cutoff))
 }
+  function updateIban(v: string) {
+  setInfo(i => i ? { ...i, iban: v } : i)
+}
 
   async function exportOfx() {
     if (!info) return;
@@ -181,10 +184,15 @@ function removeFrom() {
                   <div className="bankCard">
                     <div className="bankLogo">{info.bank.slice(0, 2).toUpperCase()}</div>
                     <div>
-                      <small>BANQUE DÉTECTÉE</small>
-                      <strong>{info.bank}</strong>
-                      <span>{info.iban || 'IBAN non détecté'}</span>
-                    </div>
+                    <small>BANQUE DÉTECTÉE</small>
+                    <strong>{info.bank}</strong>
+                    <input
+                      className="ibanInput"
+                      value={info.iban || ''}
+                      placeholder="IBAN non détecté"
+                      onChange={e => updateIban(e.target.value)}
+                    />
+                  </div>
                     <div className="confidence">{info.confidence}%<small>confiance</small></div>
                   </div>
                    <Metric label="Débits" value={fmtMoney(totals.debit, info.currency)}/>

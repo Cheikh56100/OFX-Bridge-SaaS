@@ -10,7 +10,7 @@
 // Le navigateur envoie une image de page (PNG en base64) ; cette fonction la
 // relaie à Gemini et ne renvoie que le texte transcrit.
 
-const GEMINI_MODEL = 'gemini-1.5-flash'
+const GEMINI_MODEL = 'gemini-2.5-flash'
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
 
 const PROMPT = `Tu es un moteur de transcription (OCR) pour des relevés bancaires français et africains.

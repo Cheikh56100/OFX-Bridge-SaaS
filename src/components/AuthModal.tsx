@@ -11,12 +11,17 @@ export function AuthModal({ initialMode = 'login', onSuccess, onCancel }: AuthPr
   const [isLogin, setIsLogin] = useState(initialMode === 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (!isLogin && password !== confirmPassword) {
+      setError('Les mots de passe ne correspondent pas.');
+      return;
+    }
     setLoading(true);
     try {
             if (!supabase) {
@@ -46,8 +51,11 @@ export function AuthModal({ initialMode = 'login', onSuccess, onCancel }: AuthPr
         {error && <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-sm mb-4">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white"/>
-          <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="Mot de passe" className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white"/>
-          <button type="submit" disabled={loading} className="w-full bg-amber-500 text-slate-950 font-bold py-3 rounded-lg">
+         <input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="Mot de passe" className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white"/>
+{!isLogin && (
+  <input type="password" required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirmer le mot de passe" className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white"/>
+)}
+<button type="submit" disabled={loading} className="w-full bg-amber-500 text-slate-950 font-bold py-3 rounded-lg">
             {loading ? 'Chargement...' : isLogin ? 'Se connecter' : "S'inscrire"}
           </button>
         </form>

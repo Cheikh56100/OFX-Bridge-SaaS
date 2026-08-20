@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react'
 import { ArrowDownToLine, BarChart3, CheckCircle2, FileSpreadsheet, FileText, Lock, Plus, ScanLine, ShieldCheck, Sparkles, UploadCloud, X } from 'lucide-react'
 import { extractPdf, ocrPdf } from '../lib/pdf'
+import { extractWithGemini } from '../lib/gemini'
+import { assessPagesText } from '../lib/textQuality'
 import { parseStatement, generateOfxFromEngine } from '../lib/parser'
 import { downloadExcel } from '../lib/excel'
 import { fmtMoney } from '../lib/utils'
@@ -18,15 +20,38 @@ export function Converter() {
     setStatus(`Lecture de ${file.name}`);
     setProgress(5); 
     try {
-      const r = await extractPdf(file, p => setProgress(Math.max(5, Math.round(p * .30)))); 
-      let pagesText = r.pagesText; 
-      let pagesWords = r.pagesWords; 
-      if (pagesText.join('\n').replace(/\s/g, '').length < 250) {
-        setStatus('PDF scanné — OCR local en cours…'); 
-        const ocr = await ocrPdf(file, p => setProgress(30 + Math.round(p * .45))); 
-        pagesText = ocr.pagesText; 
-        pagesWords = ocr.pagesWords
-      } 
+      // Étape 1 — PDF.js : gratuit, instantané, fonctionne pour les PDF texte.
+      const r = await extractPdf(file, p => setProgress(Math.max(5, Math.round(p * .25))));
+      let pagesText = r.pagesText;
+      let pagesWords = r.pagesWords;
+
+      // Étape 2 — Tesseract.js : gratuit, local (le PDF ne quitte jamais
+      // l'appareil), utilisé si l'étape 1 est vide/trop courte/illisible.
+      if (!assessPagesText(pagesText).ok) {
+        setStatus('PDF scanné — OCR local en cours…');
+        const ocr = await ocrPdf(file, p => setProgress(25 + Math.round(p * .35)));
+        pagesText = ocr.pagesText;
+        pagesWords = ocr.pagesWords;
+      }
+
+      // Étape 3 — Gemini 1.5 Flash : moteur de secours payant, cloud. Appelé
+      // UNIQUEMENT si les deux étapes locales gratuites ont échoué. Dans ce
+      // cas, des images des pages sont envoyées à Google via notre fonction
+      // serverless (voir netlify/functions/gemini-extract.mts).
+      if (!assessPagesText(pagesText).ok) {
+        setStatus('Lecture locale insuffisante — moteur de secours IA (Gemini)…');
+        try {
+          const gem = await extractWithGemini(file, p => setProgress(60 + Math.round(p * .15)));
+          if (assessPagesText(gem.pagesText).ok) {
+            pagesText = gem.pagesText;
+            pagesWords = gem.pagesWords;
+          }
+        } catch (gemErr: any) {
+          console.warn('Moteur de secours Gemini indisponible:', gemErr?.message || gemErr);
+          setStatus("Moteur de secours indisponible — poursuite avec le texte local…");
+        }
+      }
+
       setStatus('Analyse bancaire — moteur complet…'); 
       setProgress(78); 
       const parsed = await parseStatement(pagesText, pagesWords); 
@@ -82,7 +107,7 @@ export function Converter() {
         <div className="sideBottom">
           <div className="secure">
             <ShieldCheck size={17}/>
-            <span>Traitement local<br/><small>Vos PDF restent sur votre appareil</small></span>
+            <span>Traitement local d'abord<br/><small>Envoi cloud (Gemini) seulement en dernier recours</small></span>
           </div>
         </div>
       </aside>
@@ -95,7 +120,7 @@ export function Converter() {
             <p>Importez vos PDF, vérifiez les transactions et exportez en OFX ou Excel.</p>
           </div>
           <div className="headerActions">
-            <div className="privacyPill"><ShieldCheck size={15}/>100% local</div>
+            <div className="privacyPill"><ShieldCheck size={15}/>Local d'abord</div>
           </div>
         </header>
 
@@ -104,7 +129,7 @@ export function Converter() {
             <input id="pdfInput" hidden type="file" accept="application/pdf" multiple onChange={e => onFiles(e.target.files)}/>
             <div className="dropIcon"><UploadCloud size={28}/></div>
             <h2>Déposez vos relevés PDF</h2>
-            <p>PDF natifs ou scans. OCR gratuit exécuté dans votre navigateur.</p>
+            <p>PDF natifs ou scans. OCR gratuit dans votre navigateur, secours IA cloud si besoin.</p>
             <button className="primary"><Plus size={17}/>Importer des PDF</button>
             <div className="dropMeta">
               <span><CheckCircle2 size={14}/>PDF texte</span>
@@ -116,9 +141,10 @@ export function Converter() {
           <div className="pipeline">
             <div className="cardHead"><span>Pipeline</span><span className="live"><i/>EN DIRECT</span></div>
             <Step n="01" title="Lecture PDF" desc="PDF.js détecte le texte existant" done={progress > 20}/>
-            <Step n="02" title="OCR local" desc="Tesseract.js pour les scans" done={progress > 65}/>
-            <Step n="03" title="Parsing bancaire" desc="Détection + normalisation" done={progress === 100}/>
-            <Step n="04" title="Export" desc="OFX ou journal Excel" done={false}/>
+            <Step n="02" title="OCR local" desc="Tesseract.js pour les scans" done={progress > 55}/>
+            <Step n="03" title="IA de secours" desc="Gemini 1.5 Flash si besoin" done={progress > 75}/>
+            <Step n="04" title="Parsing bancaire" desc="Détection + normalisation" done={progress === 100}/>
+            <Step n="05" title="Export" desc="OFX ou journal Excel" done={false}/>
             <div className="progress"><span style={{ width: `${progress}%` }}/></div>
             <small className="status">{status}</small>
           </div>
@@ -210,7 +236,7 @@ export function Converter() {
         )}
 
         <footer>
-          OFX Bridge · React + Vite · OCR local sans Claude Vision · <a href="https://tesseract.projectnaptha.com/" target="_blank" rel="noreferrer">Tesseract.js</a>
+          OFX Bridge · React + Vite · OCR local en priorité (<a href="https://tesseract.projectnaptha.com/" target="_blank" rel="noreferrer">Tesseract.js</a>), secours cloud Gemini si le PDF reste illisible
         </footer>
       </main>
     </div>

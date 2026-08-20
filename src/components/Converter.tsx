@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { ArrowDownToLine, BarChart3, CheckCircle2, FileSpreadsheet, FileText, Lock, Plus, ScanLine, ShieldCheck, Sparkles, UploadCloud, X } from 'lucide-react'
+import { ArrowDownToLine, BarChart3, CheckCircle2, FileSpreadsheet, FileText, Lock, Plus, ScanLine, ShieldCheck, Sparkles, Trash2, UploadCloud, X } from 'lucide-react'
 import { extractPdf, ocrPdf } from '../lib/pdf'
 import { extractWithGemini } from '../lib/gemini'
 import { assessPagesText } from '../lib/textQuality'
@@ -74,8 +74,8 @@ export function Converter() {
   }
 
   const totals = useMemo(() => ({
-    credit: txs.filter(t => t.type === 'CREDIT').reduce((s, t) => s + t.amount, 0),
     debit: txs.filter(t => t.type === 'DEBIT').reduce((s, t) => s + t.amount, 0)
+     credit: txs.filter(t => t.type === 'CREDIT').reduce((s, t) => s + t.amount, 0),
   }), [txs])
 
   function update(i: number, k: keyof Transaction, v: string) {
@@ -171,8 +171,8 @@ export function Converter() {
                     </div>
                     <div className="confidence">{info.confidence}%<small>confiance</small></div>
                   </div>
+                   <Metric label="Débits" value={fmtMoney(totals.debit, info.currency)}/>
                   <Metric label="Crédits" value={fmtMoney(totals.credit, info.currency)}/>
-                  <Metric label="Débits" value={fmtMoney(totals.debit, info.currency)}/>
                   <Metric label="Transactions" value={String(txs.length)}/>
                 </div>
 
@@ -213,9 +213,9 @@ export function Converter() {
                               }}/>
                             </td>
                             <td>
-                              <select value={t.type} onChange={e => update(i, 'type', e.target.value)}>
-                                <option>CREDIT</option>
+                              <select value={t.type} onChange={e => update(i, 'type', e.target.value)}
                                 <option>DEBIT</option>
+                               <option>CREDIT</option>
                               </select>
                             </td>
                             <td><input value={t.name} onChange={e => update(i, 'name', e.target.value)}/></td>

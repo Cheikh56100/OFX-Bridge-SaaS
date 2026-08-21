@@ -182,8 +182,15 @@ footer a{color:var(--brass)}
   padding:26px;box-shadow:0 30px 80px #0009;position:relative}
 .modal h2{font-family:'Bricolage Grotesque',sans-serif;margin:12px 0 5px;color:var(--ivory)}
 .modal p{color:var(--muted);font-size:12px;line-height:1.5}
-.modal input{width:100%;margin-top:9px;background:var(--panel-2);border:1px solid var(--line);
-  color:var(--ivory);padding:11px 12px;border-radius:9px}
+.modal > input{
+  width:100%;
+  margin-top:9px;
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  color:var(--ivory);
+  padding:11px 12px;
+  border-radius:9px;
+}
 .full{width:100%;margin-top:12px}
 .close{position:absolute;right:14px;top:14px;background:transparent;border:0;color:var(--muted)}
 .error{color:#ffb3a4;background:#3a1f1a;padding:8px;border-radius:8px;font-size:11px;margin-top:8px}
@@ -218,3 +225,369 @@ footer a{color:var(--brass)}
   transition:.2s}
 .ibanInput:hover{color:var(--soft)}
 .ibanInput:focus{outline:none;color:var(--ivory);background:var(--panel-2);padding:2px 6px}
+
+/* =========================================================
+   BANQUES PRISES EN CHARGE
+   ========================================================= */
+
+.banksTrigger{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:11px 10px;
+  margin-bottom:10px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--panel-2);
+  color:var(--ivory);
+  text-align:left;
+  transition:.2s;
+}
+
+.banksTrigger:hover{
+  border-color:var(--steel);
+  background:var(--panel);
+  transform:translateY(-1px);
+}
+
+.banksTriggerIcon{
+  width:32px;
+  height:32px;
+  flex:none;
+  display:grid;
+  place-items:center;
+  border-radius:9px;
+  color:var(--brass);
+  background:var(--brass-dim);
+  border:1px solid #C9A15C35;
+}
+
+.banksTriggerText{
+  min-width:0;
+}
+
+.banksTriggerText strong{
+  display:block;
+  font-size:11px;
+  line-height:1.25;
+  font-weight:700;
+  color:var(--ivory);
+}
+
+.banksTriggerText span{
+  display:block;
+  color:var(--muted);
+  font-size:9.5px;
+  margin-top:4px;
+}
+
+
+/* =========================================================
+   MODALE BANQUES
+   ========================================================= */
+
+.banksModalBack{
+  z-index:50;
+}
+
+.banksModal{
+  width:min(620px, calc(100vw - 32px));
+  max-height:min(760px, calc(100vh - 40px));
+  padding:26px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+.banksModalHeader{
+  display:flex;
+  align-items:flex-start;
+  gap:13px;
+  padding-right:30px;
+}
+
+.banksModalIcon{
+  width:38px;
+  height:38px;
+  flex:none;
+  display:grid;
+  place-items:center;
+  border-radius:11px;
+  color:var(--brass);
+  background:var(--brass-dim);
+  border:1px solid #C9A15C45;
+}
+
+.banksModal h2{
+  margin:1px 0 5px;
+  font-size:20px;
+}
+
+.banksModalHeader p{
+  margin:0;
+  font-size:11px;
+}
+
+.banksModalIntro{
+  margin:15px 0 14px;
+  color:var(--muted);
+  font-size:11px;
+}
+
+.bankSearch{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  width:100%;
+  height:42px;
+  padding:0 12px;
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  border-radius:10px;
+  color:var(--muted);
+  transition:.2s;
+}
+
+.bankSearch:focus-within{
+  border-color:var(--steel);
+  box-shadow:0 0 0 3px #C9A15C12;
+}
+
+.bankSearch input{
+  width:100%;
+  min-width:0;
+  margin:0;
+  padding:0;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:var(--ivory);
+  font-size:12px;
+}
+
+.bankSearch input::placeholder{
+  color:#737a83;
+}
+
+.bankSearchClear{
+  display:grid;
+  place-items:center;
+  width:25px;
+  height:25px;
+  flex:none;
+  padding:0;
+  border:0;
+  border-radius:7px;
+  background:transparent;
+  color:var(--muted);
+}
+
+.bankSearchClear:hover{
+  color:var(--ivory);
+  background:var(--steel);
+}
+
+
+/* Liste */
+
+.banksList{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin-top:14px;
+  overflow-y:auto;
+  padding-right:4px;
+  min-height:0;
+}
+
+.banksList::-webkit-scrollbar{
+  width:5px;
+}
+
+.banksList::-webkit-scrollbar-track{
+  background:transparent;
+}
+
+.banksList::-webkit-scrollbar-thumb{
+  background:var(--steel);
+  border-radius:10px;
+}
+
+.bankItem{
+  min-height:56px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:9px 11px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:linear-gradient(
+    135deg,
+    var(--panel-2),
+    #20262e
+  );
+  transition:.18s;
+}
+
+.bankItem:hover{
+  border-color:var(--steel);
+  background:var(--panel);
+  transform:translateY(-1px);
+}
+
+.bankItemLogo{
+  width:30px;
+  height:30px;
+  flex:none;
+  display:grid;
+  place-items:center;
+  border-radius:8px;
+  background:linear-gradient(
+    135deg,
+    var(--steel),
+    #20262e
+  );
+  border:1px solid #3A414988;
+  color:var(--brass);
+  font-size:9px;
+  font-weight:800;
+}
+
+.bankItemContent{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+
+.bankItemNumber{
+  color:#69717b;
+  font-size:8px;
+  font-variant-numeric:tabular-nums;
+}
+
+.bankItemContent strong{
+  color:var(--soft);
+  font-size:10.5px;
+  font-weight:600;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.banksEmpty{
+  grid-column:1/-1;
+  min-height:130px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  color:var(--muted);
+  border:1px dashed var(--steel);
+  border-radius:12px;
+}
+
+.banksEmpty svg{
+  color:var(--brass);
+  margin-bottom:3px;
+}
+
+.banksEmpty strong{
+  color:var(--soft);
+  font-size:12px;
+}
+
+.banksEmpty span{
+  font-size:10px;
+}
+
+
+/* Pied de modale */
+
+.banksModalFooter{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding-top:15px;
+  margin-top:14px;
+  border-top:1px solid var(--line);
+}
+
+.banksModalFooter > span{
+  color:var(--muted);
+  font-size:9.5px;
+}
+
+.banksModalFooter .secondary{
+  margin:0;
+  padding:9px 15px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media(max-width:650px){
+  .banksModal{
+    padding:20px;
+    max-height:calc(100vh - 24px);
+  }
+
+  .banksList{
+    grid-template-columns:1fr;
+  }
+
+  .banksModal h2{
+    font-size:18px;
+  }
+}
+.bankItemLogo {
+  width: 32px;
+  height: 32px;
+  flex: none;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  overflow: hidden;
+}
+
+.bankItemLogo img {
+  width: 24px;
+  height: 24px;
+
+  object-fit: contain;
+  display: block;
+}
+.bankLogo{
+  width:48px;
+  height:48px;
+  flex:none;
+  display:grid;
+  place-items:center;
+  border-radius:12px;
+  background:#fff;
+  border:1px solid var(--line);
+  overflow:hidden;
+}
+
+.bankLogo img{
+  width:34px;
+  height:34px;
+  object-fit:contain;
+}
+
+.bankLogo span{
+  color:#111;
+  font-size:12px;
+  font-weight:800;
+}

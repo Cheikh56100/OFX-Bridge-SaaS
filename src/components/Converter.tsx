@@ -1,5 +1,20 @@
 import React, { useMemo, useState } from 'react'
-import { ArrowDownToLine, BarChart3, CheckCircle2, FileSpreadsheet, FileText, Lock, Plus, ScanLine, ShieldCheck, Sparkles, Trash2, UploadCloud, X } from 'lucide-react'
+import {
+  ArrowDownToLine,
+  BarChart3,
+  CheckCircle2,
+  FileSpreadsheet,
+  FileText,
+  Lock,
+  Plus,
+  ScanLine,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  Trash2,
+  UploadCloud,
+  X
+} from 'lucide-react'
 import { extractPdf, ocrPdf } from '../lib/pdf'
 import { extractWithGemini } from '../lib/gemini'
 import { assessPagesText } from '../lib/textQuality'
@@ -8,9 +23,44 @@ import { downloadExcel } from '../lib/excel'
 import { fmtMoney } from '../lib/utils'
 import { StatementInfo, Transaction } from '../types'
 
+const SUPPORTED_BANKS = [
+  { name: 'Qonto', logo: '/banks/qonto.svg' },
+  { name: 'Banque Populaire', logo: '/banks/banque-populaire.svg' },
+  { name: 'Société Générale', logo: '/banks/societe-generale.svg' },
+  { name: "Caisse d'Épargne", logo: '/banks/caisse-epargne.svg' },
+  { name: 'Crédit Agricole', logo: '/banks/credit-agricole.svg' },
+  { name: 'CIC', logo: '/banks/cic.svg' },
+  { name: 'Crédit Mutuel', logo: '/banks/credit-mutuel.svg' },
+  { name: 'LCL', logo: '/banks/lcl.svg' },
+  { name: 'La Banque Postale', logo: '/banks/banque-postale.svg' },
+  { name: 'CGD (Caixa)', logo: '/banks/cgd-caixa.svg' },
+  { name: 'MyPOS', logo: '/banks/mypos.svg' },
+  { name: 'Shine', logo: '/banks/shine.svg' },
+  { name: 'Ecobank', logo: '/banks/ecobank.svg' },
+  { name: 'SG Sénégal', logo: '/banks/sg-senegal.svg' },
+  { name: 'UBA', logo: '/banks/uba.svg' },
+  { name: 'BNDE', logo: '/banks/bnde.svg' },
+  { name: 'Banque Islamique', logo: '/banks/banque-islamique.svg' },
+  { name: 'BSIC', logo: '/banks/bsic.svg' },
+  { name: 'Bank of Africa', logo: '/banks/bank-of-africa.svg' },
+  { name: 'NSIA Banque', logo: '/banks/nsia-banque.svg' },
+  { name: 'Orabank', logo: '/banks/orabank.svg' },
+  { name: 'CBAO', logo: '/banks/cbao.svg' },
+  { name: 'Coris Bank', logo: '/banks/coris-bank.svg' },
+]
+
+function getBankLogo(bankName: string) {
+  const bank = SUPPORTED_BANKS.find(
+    b => b.name.toLowerCase() === bankName.toLowerCase()
+  )
+  return bank?.logo
+}
+
 export function Converter() {
   const [files, setFiles] = useState<File[]>([]); 
   const [active, setActive] = useState(0); 
+  const [showBanksModal, setShowBanksModal] = useState(false)
+  const [bankSearch, setBankSearch] = useState('')
   const [info, setInfo] = useState<StatementInfo|null>(null); 
   const [txs, setTxs] = useState<Transaction[]>([]); 
   const [status, setStatus] = useState('Prêt'); 
@@ -21,13 +71,10 @@ export function Converter() {
     setStatus(`Lecture de ${file.name}`);
     setProgress(5); 
     try {
-      // Étape 1 — PDF.js : gratuit, instantané, fonctionne pour les PDF texte.
       const r = await extractPdf(file, p => setProgress(Math.max(5, Math.round(p * .25))));
       let pagesText = r.pagesText;
       let pagesWords = r.pagesWords;
 
-      // Étape 2 — Tesseract.js : gratuit, local (le PDF ne quitte jamais
-      // l'appareil), utilisé si l'étape 1 est vide/trop courte/illisible.
       if (!assessPagesText(pagesText).ok) {
         setStatus('PDF scanné — OCR local en cours…');
         const ocr = await ocrPdf(file, p => setProgress(25 + Math.round(p * .35)));
@@ -35,10 +82,6 @@ export function Converter() {
         pagesWords = ocr.pagesWords;
       }
 
-      // Étape 3 — Gemini 1.5 Flash : moteur de secours payant, cloud. Appelé
-      // UNIQUEMENT si les deux étapes locales gratuites ont échoué. Dans ce
-      // cas, des images des pages sont envoyées à Google via notre fonction
-      // serverless (voir netlify/functions/gemini-extract.mts).
       if (!assessPagesText(pagesText).ok) {
         setStatus('Lecture locale insuffisante — moteur de secours IA (Gemini)…');
         try {
@@ -79,27 +122,37 @@ export function Converter() {
     credit: txs.filter(t => t.type === 'CREDIT').reduce((s, t) => s + t.amount, 0),
   }), [txs])
 
+  const filteredBanks = useMemo(() => {
+    const query = bankSearch.trim().toLowerCase()
+    if (!query) return SUPPORTED_BANKS
+    return SUPPORTED_BANKS.filter(bank =>
+      bank.name.toLowerCase().includes(query)
+    )
+  }, [bankSearch])
+
   function update(i: number, k: keyof Transaction, v: string) {
     setTxs(a => a.map((t, idx) => idx === i ? { ...t, [k]: k === 'amount' ? Number(v) : v } : t))
   }
-function removeRow(i: number) {
-  setTxs(a => a.filter((_, idx) => idx !== i))
-}
 
-function removeBefore() {
-  if (!cutoffDate) return;
-  const cutoff = cutoffDate.replace(/-/g, ''); // yyyy-mm-dd -> yyyymmdd
-  setTxs(a => a.filter(t => t.date >= cutoff))
-}
+  function removeRow(i: number) {
+    setTxs(a => a.filter((_, idx) => idx !== i))
+  }
 
-function removeFrom() {
-  if (!cutoffDate) return;
-  const cutoff = cutoffDate.replace(/-/g, '');
-  setTxs(a => a.filter(t => t.date < cutoff))
-}
+  function removeBefore() {
+    if (!cutoffDate) return;
+    const cutoff = cutoffDate.replace(/-/g, '');
+    setTxs(a => a.filter(t => t.date >= cutoff))
+  }
+
+  function removeFrom() {
+    if (!cutoffDate) return;
+    const cutoff = cutoffDate.replace(/-/g, '');
+    setTxs(a => a.filter(t => t.date < cutoff))
+  }
+
   function updateIban(v: string) {
-  setInfo(i => i ? { ...i, iban: v } : i)
-}
+    setInfo(i => i ? { ...i, iban: v } : i)
+  }
 
   async function exportOfx() {
     if (!info) return;
@@ -124,9 +177,30 @@ function removeFrom() {
           <button className="nav active"><BarChart3 size={18}/>Vue d’ensemble</button>
         </nav>
         <div className="sideBottom">
+          <button
+            className="banksTrigger"
+            onClick={() => setShowBanksModal(true)}
+            type="button"
+          >
+            <div className="banksTriggerIcon">
+              <ShieldCheck size={16} />
+            </div>
+
+            <div className="banksTriggerText">
+              <strong>{SUPPORTED_BANKS.length} banques prises en charge</strong>
+              <span>Voir la liste</span>
+            </div>
+          </button>
+
           <div className="secure">
             <ShieldCheck size={17}/>
-            <span>Traitement local d'abord<br/><small>Envoi cloud (Gemini) seulement en dernier recours</small></span>
+            <span>
+              Traitement local d'abord
+              <br />
+              <small>
+                Envoi cloud (Gemini) seulement en dernier recours
+              </small>
+            </span>
           </div>
         </div>
       </aside>
@@ -182,20 +256,31 @@ function removeFrom() {
               <>
                 <div className="summary">
                   <div className="bankCard">
-                    <div className="bankLogo">{info.bank.slice(0, 2).toUpperCase()}</div>
+                    <div className="bankLogo">
+                      {getBankLogo(info.bank) ? (
+                        <img
+                          src={getBankLogo(info.bank)}
+                          alt={info.bank}
+                        />
+                      ) : (
+                        <span>
+                          {info.bank.slice(0, 2).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
                     <div>
-                    <small>BANQUE DÉTECTÉE</small>
-                    <strong>{info.bank}</strong>
-                    <input
-                      className="ibanInput"
-                      value={info.iban || ''}
-                      placeholder="IBAN non détecté"
-                      onChange={e => updateIban(e.target.value)}
-                    />
-                  </div>
+                      <small>BANQUE DÉTECTÉE</small>
+                      <strong>{info.bank}</strong>
+                      <input
+                        className="ibanInput"
+                        value={info.iban || ''}
+                        placeholder="IBAN non détecté"
+                        onChange={e => updateIban(e.target.value)}
+                      />
+                    </div>
                     <div className="confidence">{info.confidence}%<small>confiance</small></div>
                   </div>
-                   <Metric label="Débits" value={fmtMoney(totals.debit, info.currency)}/>
+                  <Metric label="Débits" value={fmtMoney(totals.debit, info.currency)}/>
                   <Metric label="Crédits" value={fmtMoney(totals.credit, info.currency)}/>
                   <Metric label="Transactions" value={String(txs.length)}/>
                 </div>
@@ -207,14 +292,14 @@ function removeFrom() {
                       <p>Vérifiez les lignes avant de générer le fichier comptable.</p>
                     </div>
                     <div className="cutoffTools">
-  <input
-    type="date"
-    value={cutoffDate}
-    onChange={e => setCutoffDate(e.target.value)}
-  />
-  <button className="ghost" onClick={removeBefore}>Garder à partir de cette date</button>
-  <button className="ghost" onClick={removeFrom}>Garder avant cette date</button>
-</div>
+                      <input
+                        type="date"
+                        value={cutoffDate}
+                        onChange={e => setCutoffDate(e.target.value)}
+                      />
+                      <button className="ghost" onClick={removeBefore}>Garder à partir de cette date</button>
+                      <button className="ghost" onClick={removeFrom}>Garder avant cette date</button>
+                    </div>
                     <div className="actions">
                       <button className="secondary" onClick={() => info && downloadExcel(info, txs, `${files[active]?.name.replace(/\.pdf$/i, '') || 'journal'}.xlsx`)}>
                         <FileSpreadsheet size={16}/>Excel
@@ -234,7 +319,7 @@ function removeFrom() {
                           <th>Libellé</th>
                           <th>Mémo</th>
                           <th className="right">Montant</th>
-                           <th></th>
+                          <th></th>
                         </tr>
                       </thead>
                       <tbody>
@@ -249,7 +334,7 @@ function removeFrom() {
                             <td>
                               <select value={t.type} onChange={e => update(i, 'type', e.target.value)}>
                                 <option>DEBIT</option>
-                               <option>CREDIT</option>
+                                <option>CREDIT</option>
                               </select>
                             </td>
                             <td><input value={t.name} onChange={e => update(i, 'name', e.target.value)}/></td>
@@ -258,7 +343,7 @@ function removeFrom() {
                               <input className={`amount ${t.amount >= 0 ? 'positive' : 'negative'}`} value={t.amount} onChange={e => update(i, 'amount', e.target.value)}/>
                             </td>
                             <td className="right">
-                             <button className="iconBtn" title="Supprimer cette ligne" onClick={() => removeRow(i)}>
+                              <button className="iconBtn" title="Supprimer cette ligne" onClick={() => removeRow(i)}>
                                 <Trash2 size={14}/>
                               </button>
                             </td>
@@ -272,6 +357,122 @@ function removeFrom() {
               </>
             )}
           </section>
+        )}
+
+        {showBanksModal && (
+          <div
+            className="modalBack banksModalBack"
+            onMouseDown={() => setShowBanksModal(false)}
+          >
+            <div
+              className="modal banksModal"
+              onMouseDown={e => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="banks-modal-title"
+            >
+              <button
+                className="close"
+                onClick={() => setShowBanksModal(false)}
+                aria-label="Fermer"
+                type="button"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="banksModalHeader">
+                <div className="banksModalIcon">
+                  <ShieldCheck size={20} />
+                </div>
+
+                <div>
+                  <h2 id="banks-modal-title">
+                    Banques prises en charge
+                  </h2>
+
+                  <p>
+                    OFX Bridge est compatible avec {SUPPORTED_BANKS.length} banques.
+                  </p>
+                </div>
+              </div>
+
+              <p className="banksModalIntro">
+                Retrouvez les établissements actuellement reconnus par le moteur
+                de parsing bancaire.
+              </p>
+
+              <div className="bankSearch">
+                <Search size={17} />
+
+                <input
+                  type="search"
+                  value={bankSearch}
+                  onChange={e => setBankSearch(e.target.value)}
+                  placeholder="Rechercher une banque..."
+                  aria-label="Rechercher une banque"
+                />
+
+                {bankSearch && (
+                  <button
+                    type="button"
+                    className="bankSearchClear"
+                    onClick={() => setBankSearch('')}
+                    aria-label="Effacer la recherche"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+
+              <div className="banksList">
+                {filteredBanks.map((bank, index) => (
+                  <div key={index} className="bankItem">
+                    <div className="bankItemLogo">
+                      <img
+                        src={bank.logo}
+                        alt={bank.name}
+                        loading="lazy"
+                      />
+                    </div>
+
+                    <div className="bankItemContent">
+                      <span className="bankItemNumber">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+
+                      <strong>{bank.name}</strong>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {!filteredBanks.length && (
+                <div className="banksEmpty">
+                  <Search size={20} />
+                  <strong>Aucune banque trouvée</strong>
+                  <span>
+                    Essayez avec un autre nom.
+                  </span>
+                </div>
+              )}
+
+              <div className="banksModalFooter">
+                <span>
+                  {filteredBanks.length} banque
+                  {filteredBanks.length > 1 ? 's' : ''} affichée
+                  {filteredBanks.length > 1 ? 's' : ''}
+                </span>
+
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() => setShowBanksModal(false)}
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         <footer>

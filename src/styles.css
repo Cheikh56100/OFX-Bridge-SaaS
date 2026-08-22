@@ -436,18 +436,6 @@ footer a{color:var(--brass)}
   background:var(--panel);
   transform:translateY(-1px);
 }
-
-.bankItemLogo{
-  width:30px;
-  height:30px;
-  flex:none;
-  display:grid;
-  place-items:center;
-  border-radius:8px;
-  background:linear-gradient(
-    135deg,
-    var(--steel),
-    #20262e
   );
   border:1px solid #3A414988;
   color:var(--brass);
@@ -545,49 +533,4 @@ footer a{color:var(--brass)}
   .banksModal h2{
     font-size:18px;
   }
-}
-.bankItemLogo {
-  width: 32px;
-  height: 32px;
-  flex: none;
-
-  display: grid;
-  place-items: center;
-
-  border-radius: 8px;
-  background: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-
-  overflow: hidden;
-}
-
-.bankItemLogo img {
-  width: 24px;
-  height: 24px;
-
-  object-fit: contain;
-  display: block;
-}
-.bankLogo{
-  width:48px;
-  height:48px;
-  flex:none;
-  display:grid;
-  place-items:center;
-  border-radius:12px;
-  background:#fff;
-  border:1px solid var(--line);
-  overflow:hidden;
-}
-
-.bankLogo img{
-  width:34px;
-  height:34px;
-  object-fit:contain;
-}
-
-.bankLogo span{
-  color:#111;
-  font-size:12px;
-  font-weight:800;
 }

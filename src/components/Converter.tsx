@@ -24,37 +24,30 @@ import { fmtMoney } from '../lib/utils'
 import { StatementInfo, Transaction } from '../types'
 
 const SUPPORTED_BANKS = [
-  { name: 'Qonto', logo: '/banks/qonto.svg' },
-  { name: 'Banque Populaire', logo: '/banks/banque-populaire.svg' },
-  { name: 'Société Générale', logo: '/banks/societe-generale.svg' },
-  { name: "Caisse d'Épargne", logo: '/banks/caisse-epargne.svg' },
-  { name: 'Crédit Agricole', logo: '/banks/credit-agricole.svg' },
-  { name: 'CIC', logo: '/banks/cic.svg' },
-  { name: 'Crédit Mutuel', logo: '/banks/credit-mutuel.svg' },
-  { name: 'LCL', logo: '/banks/lcl.svg' },
-  { name: 'La Banque Postale', logo: '/banks/banque-postale.svg' },
-  { name: 'CGD (Caixa)', logo: '/banks/cgd-caixa.svg' },
-  { name: 'MyPOS', logo: '/banks/mypos.svg' },
-  { name: 'Shine', logo: '/banks/shine.svg' },
-  { name: 'Ecobank', logo: '/banks/ecobank.svg' },
-  { name: 'SG Sénégal', logo: '/banks/sg-senegal.svg' },
-  { name: 'UBA', logo: '/banks/uba.svg' },
-  { name: 'BNDE', logo: '/banks/bnde.svg' },
-  { name: 'Banque Islamique', logo: '/banks/banque-islamique.svg' },
-  { name: 'BSIC', logo: '/banks/bsic.svg' },
-  { name: 'Bank of Africa', logo: '/banks/bank-of-africa.svg' },
-  { name: 'NSIA Banque', logo: '/banks/nsia-banque.svg' },
-  { name: 'Orabank', logo: '/banks/orabank.svg' },
-  { name: 'CBAO', logo: '/banks/cbao.svg' },
-  { name: 'Coris Bank', logo: '/banks/coris-bank.svg' },
+  { name: 'Qonto' },
+  { name: 'Banque Populaire' },
+  { name: 'Société Générale' },
+  { name: "Caisse d'Épargne" },
+  { name: 'Crédit Agricole' },
+  { name: 'CIC' },
+  { name: 'Crédit Mutuel' },
+  { name: 'LCL' },
+  { name: 'La Banque Postale' },
+  { name: 'CGD (Caixa)' },
+  { name: 'MyPOS' },
+  { name: 'Shine' },
+  { name: 'Ecobank' },
+  { name: 'SG Sénégal' },
+  { name: 'UBA' },
+  { name: 'BNDE' },
+  { name: 'Banque Islamique' },
+  { name: 'BSIC' },
+  { name: 'Bank of Africa' },
+  { name: 'NSIA Banque' },
+  { name: 'Orabank' },
+  { name: 'CBAO' },
+  { name: 'Coris Bank' },
 ]
-
-function getBankLogo(bankName: string) {
-  const bank = SUPPORTED_BANKS.find(
-    b => b.name.toLowerCase() === bankName.toLowerCase()
-  )
-  return bank?.logo
-}
 
 export function Converter() {
   const [files, setFiles] = useState<File[]>([]); 
@@ -256,18 +249,10 @@ export function Converter() {
               <>
                 <div className="summary">
                   <div className="bankCard">
-                    <div className="bankLogo">
-                      {getBankLogo(info.bank) ? (
-                        <img
-                          src={getBankLogo(info.bank)}
-                          alt={info.bank}
-                        />
-                      ) : (
-                        <span>
-                          {info.bank.slice(0, 2).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
+                    <div className="bankDetectedName">
+  <small>BANQUE DÉTECTÉE</small>
+  <strong>{info.bank}</strong>
+</div>
                     <div>
                       <small>BANQUE DÉTECTÉE</small>
                       <strong>{info.bank}</strong>
@@ -426,23 +411,15 @@ export function Converter() {
 
               <div className="banksList">
                 {filteredBanks.map((bank, index) => (
-                  <div key={index} className="bankItem">
-                    <div className="bankItemLogo">
-                      <img
-                        src={bank.logo}
-                        alt={bank.name}
-                        loading="lazy"
-                      />
-                    </div>
+                  <div className="bankItem">
+  <div className="bankItemContent">
+    <span className="bankItemNumber">
+      {String(index + 1).padStart(2, '0')}
+    </span>
 
-                    <div className="bankItemContent">
-                      <span className="bankItemNumber">
-                        {String(index + 1).padStart(2, '0')}
-                      </span>
-
-                      <strong>{bank.name}</strong>
-                    </div>
-                  </div>
+    <strong>{bank.name}</strong>
+  </div>
+</div>
                 ))}
               </div>
 
